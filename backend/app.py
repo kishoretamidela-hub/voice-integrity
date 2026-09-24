@@ -547,32 +547,30 @@ def predict():
         # CNN predictions
         # --------------------------------------------------------------------
 
-        window_probs = []
+       window_probs = []
 
+with torch.no_grad():
 
-        with torch.no_grad():
+    mel_batch = torch.cat(
+        [
+            audio_slice_to_mel(s)
+            for s in slices
+        ],
+        dim=0
+    ).to(device)
 
-            for s in slices:
+    logits = model(
+        mel_batch
+    )
 
-                mel_tensor = (
-                    audio_slice_to_mel(s)
-                    .to(device)
-                )
+    probs = torch.sigmoid(
+        logits
+    ).flatten().tolist()
 
-
-                logit = model(
-                    mel_tensor
-                )
-
-
-                p = torch.sigmoid(
-                    logit
-                ).item()
-
-
-                window_probs.append(
-                    round(p, 4)
-                )
+    window_probs = [
+        round(p, 4)
+        for p in probs
+    ]
 
 
         # --------------------------------------------------------------------
