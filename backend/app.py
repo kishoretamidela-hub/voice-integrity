@@ -259,8 +259,7 @@ def convert_to_wav(audio_bytes):
 
         raise RuntimeError(
             "FFmpeg audio conversion failed: "
-            +
-            result.stderr.decode(
+            + result.stderr.decode(
                 "utf-8",
                 errors="ignore"
             )
@@ -358,9 +357,7 @@ def analyze_with_aurigin(wav_bytes):
         )
 
 
-    url = (
-        "https://api.aurigin.ai/v1/predict"
-    )
+    url = "https://api.aurigin.ai/v1/predict"
 
 
     headers = {
@@ -547,30 +544,34 @@ def predict():
         # CNN predictions
         # --------------------------------------------------------------------
 
-       window_probs = []
+        window_probs = []
 
-with torch.no_grad():
 
-    mel_batch = torch.cat(
-        [
-            audio_slice_to_mel(s)
-            for s in slices
-        ],
-        dim=0
-    ).to(device)
+        with torch.no_grad():
 
-    logits = model(
-        mel_batch
-    )
+            mel_batch = torch.cat(
+                [
+                    audio_slice_to_mel(s)
+                    for s in slices
+                ],
+                dim=0
+            ).to(device)
 
-    probs = torch.sigmoid(
-        logits
-    ).flatten().tolist()
 
-    window_probs = [
-        round(p, 4)
-        for p in probs
-    ]
+            logits = model(
+                mel_batch
+            )
+
+
+            probs = torch.sigmoid(
+                logits
+            ).flatten().tolist()
+
+
+            window_probs = [
+                round(p, 4)
+                for p in probs
+            ]
 
 
         # --------------------------------------------------------------------
@@ -626,18 +627,7 @@ with torch.no_grad():
 
 
         # ====================================================================
-        # IMPORTANT CNN THRESHOLD
-        # ====================================================================
-        #
-        # CNN is considered strongly AI only at 72% or above.
-        #
-        # This replaces the old:
-        #
-        # composite_prob >= 0.50
-        # OR
-        # max_prob >= 0.68
-        #
-        # which was causing false positives.
+        # CNN THRESHOLD
         # ====================================================================
 
         CNN_AI_THRESHOLD = 72.0
@@ -719,23 +709,6 @@ with torch.no_grad():
         # ====================================================================
         # STEP 4: FINAL DECISION
         # ====================================================================
-        #
-        # Aurigin is the primary detector.
-        #
-        # IMPORTANT:
-        #
-        # If Aurigin says BONAFIDE,
-        # we trust that result even if the local CNN
-        # produces a noisy high score.
-        #
-        # This prevents cases such as:
-        #
-        # CNN     = 82%
-        # Aurigin = bonafide
-        #
-        # from incorrectly becoming HIGH.
-        # ====================================================================
-
 
         if aurigin_suspicious:
 
@@ -764,8 +737,6 @@ with torch.no_grad():
 
             # ---------------------------------------------------------------
             # Aurigin explicitly says genuine human
-            #
-            # CNN noise does NOT override Aurigin here.
             # ---------------------------------------------------------------
 
             final_result = (
@@ -1091,11 +1062,22 @@ if __name__ == "__main__":
     )
 
 
+    # Render provides PORT through an environment variable.
+    # Locally this defaults to 5000.
+
+    port = int(
+        os.environ.get(
+            "PORT",
+            5000
+        )
+    )
+
+
     app.run(
 
         host="0.0.0.0",
 
-        port=5000,
+        port=port,
 
         debug=False
     )
