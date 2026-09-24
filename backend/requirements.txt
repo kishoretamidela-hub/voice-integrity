@@ -1,0 +1,9 @@
+flask
+flask-cors
+torch
+torchaudio
+librosa
+numpy
+requests
+imageio-ffmpeg
+soundfile
