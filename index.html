@@ -675,7 +675,7 @@
     const statusEl = document.getElementById('serverStatus');
     statusEl.textContent = 'Checking…';
     try {
-      const res = await fetch('http://127.0.0.1:5000/predict', { method: 'OPTIONS' });
+      const res = await fetch('https://voice-integrity.onrender.com/predict', { method: 'OPTIONS' });
       statusEl.textContent = res.ok || res.status === 204
         ? 'Connected — real model detection is active.'
         : 'Server responded but with an unexpected status: ' + res.status;
